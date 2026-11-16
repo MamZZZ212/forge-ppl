@@ -13,6 +13,7 @@ Sur téléphone, ajoute-la à l'écran d'accueil pour l'avoir comme une vraie ap
 - **Échauffement à l'élastique** au début de chaque séance, **gainage** (farmer's walk, suitcase carry, Pallof press) et **routine mobilité guidée** pour les hanches et le dos.
 - **Cardio par niveaux** pour devenir hybride : footing en zone 2, fractionné, tapis incliné.
 - **Nutrition** : objectif protéines et calories, ajout rapide, repas types sans gluten (air fryer, rice cooker).
+- **Photos animées** de chaque exercice (touche pour agrandir).
 - **KPI** : force estimée, volume par muscle, poids de corps, minutes de cardio, records.
 
 ## L'utiliser
@@ -34,3 +35,7 @@ Le coach IA ne fonctionne que dans la version hébergée sur claude.ai.
 ## Avertissement
 
 Ce programme est donné à titre indicatif. En cas de douleur persistante ou de problème de santé, demande l'avis d'un médecin ou d'un kiné.
+
+## Crédits
+
+Photos des exercices : [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (domaine public, Unlicense).

@@ -188,6 +188,13 @@ table.prog td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
 .ex-n{flex:0 0 auto;width:30px;height:30px;border-radius:9px;background:var(--sess-soft);color:var(--sess);display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:18px}
 .ex-card.complete .ex-n{background:var(--good);color:var(--surface)}
 .ex-head h3{font-size:16px;font-weight:700}
+.exanim{position:relative;display:block;padding:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface-2);aspect-ratio:4/3;width:100%;max-width:100%;flex:0 0 auto;cursor:zoom-in}
+.exanim img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.exanim img+img{animation:exflip 1.8s steps(1,end) infinite}
+@keyframes exflip{0%{opacity:0}50%{opacity:1}}
+.exanim.thumb{width:92px;flex:0 0 auto}
+.exanim.prog{width:min(260px,100%);margin:8px 0}
+.exanim.big{width:100%;max-width:520px;align-self:center;cursor:default}
 .target{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:13.5px;padding:9px 11px;border-radius:10px;background:var(--surface-2)}
 .target b{font-family:var(--f-display);font-size:19px}
 .sets{display:grid;grid-template-columns:34px minmax(0,1fr) minmax(0,1fr) 48px;gap:6px 8px;align-items:center}
@@ -350,6 +357,15 @@ const EX = {
 const MUSCLES = {chest:"Pectoraux",back:"Dos",shoulders:"Épaules",biceps:"Biceps",triceps:"Triceps",quads:"Quadriceps",hams:"Ischios",glutes:"Fessiers",calves:"Mollets",core:"Gainage"};
 const LEG_M = ["quads","hams","glutes","calves"];
 const isLift = exId => EX[exId] && EX[exId].m !== "core";
+// Photos d'exercices : free-exercise-db (domaine public, Unlicense). Les 2 positions alternent pour animer le mouvement.
+const EX_IMG = {legpressH:"legpress", suitcase:"farmers"};
+const HAS_IMG = new Set(["bench","incdb","ohp","fly","latraise","pushdown","ohext","pulldown","csrow","cablerow","reardelt","incurl","hammer","hacksquat","legpress","bss","legext","legcurl","calf","hipthrust","seatedcurl","lunge","farmers","pallof"]);
+function exAnim(id, cls=""){
+  const k = EX_IMG[id] || id;
+  if (!HAS_IMG.has(k)) return "";
+  const tag = cls === "big" ? "div" : "button";
+  return `<${tag} class="exanim ${cls}" ${tag === "button" ? `data-zoom="${id}" aria-label="Agrandir l'animation : ${h(EX[id].name)}"` : 'role="img" aria-label="Animation de l\'exercice"'}><img src="img/ex/${k}-0.jpg" alt="" loading="lazy" decoding="async"><img src="img/ex/${k}-1.jpg" alt="" loading="lazy" decoding="async"></${tag}>`;
+}
 const SESSIONS = {
   push:{name:"Push",sub:"Pecs · épaules · triceps",c:"accent",items:[
     {ex:"bench",sets:3,min:6,max:8,rest:150},{ex:"incdb",sets:3,min:8,max:10,rest:120},{ex:"ohp",sets:2,min:8,max:10,rest:120},
@@ -832,13 +848,14 @@ function vProgram(){
     <div class="pr"><b>Poignet</b>Prises neutres dès que possible, sangles sur les tirages lourds et les fentes. Douleur vive : arrête l'exo et prends l'alternative. Si ça persiste, consulte.</div>
     <div class="pr"><b>Hybride</b>2 séances de course + 3 routines mobilité par semaine en plus de la muscu (onglet Cardio). Fractionné après Push ou Pull, jamais la veille d'une séance jambes.</div>
     <div class="pr"><b>Décharge</b>Toutes les 7 semaines (ou si tout stagne), une semaine à 2 séries par exo, mêmes charges.</div>
-  </div></section>
+  </div>
+  <p class="small muted">Photos des exercices : free-exercise-db (domaine public). Touche une photo pour l'agrandir.</p></section>
   ${Object.entries(SESSIONS).map(([id,s]) => `
   <section class="card sess-card" style="${sessColor(id)}">
     <div class="card-h"><h2 style="color:var(--sess)">${s.name}</h2><span class="small muted">${s.sub} · ~${estMinutes(id)} min · ${setCount(id)} séries</span></div>
     <div class="tbl-wrap"><table class="prog"><thead><tr><th>Exercice</th><th>Séries × reps</th><th>Repos</th><th>Prochaine charge</th></tr></thead><tbody>
     ${s.items.map(it => { const e = EX[it.ex], t = nextTarget(it); return `<tr><td><b>${h(e.name)}</b><div class="cue">${h(e.fr)}</div>
-      <details><summary class="cue" style="color:var(--sess);font-weight:600">Consignes</summary><div class="cue">${h(e.cue)}<br>Alternative : ${h(e.alt)}${e.prev ? `<br>Record avant pause : ${e.prev[0]} kg × ${e.prev[1]}` : ""}</div></details></td>
+      <details><summary class="cue" style="color:var(--sess);font-weight:600">Consignes</summary>${exAnim(it.ex,"prog")}<div class="cue">${h(e.cue)}<br>Alternative : ${h(e.alt)}${e.prev ? `<br>Record avant pause : ${e.prev[0]} kg × ${e.prev[1]}` : ""}</div></details></td>
       <td class="n">${it.sets} × ${it.min}–${it.max}${e.rl ? " s" : ""}${e.reps ? " "+e.reps : ""}</td><td class="n">${mmss(it.rest)}</td><td class="n"><b>${fmt(t.w)}</b> ${h(e.unit)}<br>${chipFor(t)}</td></tr>`; }).join("")}
     </tbody></table></div>
     <details><summary class="small" style="color:var(--sess);font-weight:600">Échauffement de la séance (~8 min)</summary><div style="margin-top:6px">${warmupFor(id).map(w => `<div class="kv small"><span>${h(w[0])}</span><span class="muted num">${h(w[1])}</span></div>`).join("")}</div></details>
@@ -1244,7 +1261,7 @@ function warmupCard(){
 function exCard(e, i, it){
   const ex = EX[e.ex], t = e.t, complete = e.sets.length && e.sets.every(s => s.done);
   return `<section class="ex-card ${complete ? "complete" : ""}" data-i="${i}">
-    <div class="ex-head"><span class="ex-n">${i+1}</span><div style="min-width:0"><h3>${h(ex.name)}</h3><p class="small muted">${it.sets} × ${it.min}–${it.max}${ex.rl ? " s" : ""}${ex.reps ? " "+ex.reps : ""} · repos ${mmss(it.rest)} · ${h(ex.unit)}</p></div></div>
+    <div class="ex-head"><span class="ex-n">${i+1}</span><div style="min-width:0;flex:1"><h3>${h(ex.name)}</h3><p class="small muted">${it.sets} × ${it.min}–${it.max}${ex.rl ? " s" : ""}${ex.reps ? " "+ex.reps : ""} · repos ${mmss(it.rest)} · ${h(ex.unit)}</p></div>${exAnim(e.ex,"thumb")}</div>
     <div class="target"><span>Objectif <b class="num">${fmt(t.w)} kg × ${t.reps}${ex.rl ? " s" : ""}</b></span>${chipFor(t)}<span class="small muted" style="flex-basis:100%">${h(t.reason)}</span></div>
     <div class="sets"><span class="hd">Série</span><span class="hd">kg</span><span class="hd">${ex.rl ? "Sec" : "Reps"}</span><span class="hd">OK</span>
     ${e.sets.map((s, j) => `<span class="sn">${j+1}</span>
@@ -1540,6 +1557,13 @@ $("#view").addEventListener("submit", ev => {
 });
 $("#view").addEventListener("keydown", ev => { if (ev.target.id === "chatIn" && ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); $("#chatForm").requestSubmit(); } });
 window.addEventListener("hashchange", () => { const v = location.hash.slice(1); if (VIEWS.includes(v) && v !== viewState) go(v); });
+
+document.addEventListener("click", ev => {
+  const z = ev.target.closest("[data-zoom]"); if (!z) return;
+  ev.preventDefault();
+  const ex = EX[z.dataset.zoom]; if (!ex) return;
+  openSheet(`<h2>${h(ex.name)}</h2><p class="small muted">${h(ex.fr)}</p>${exAnim(z.dataset.zoom, "big")}<p>${h(ex.cue)}</p><p class="small muted">Alternative : ${h(ex.alt)}${EX_IMG[z.dataset.zoom] ? " · photo d'un exercice proche" : ""}</p><button class="btn btn-block" data-close>Fermer</button>`);
+});
 
 /* ================= BOOT ================= */
 render();
