@@ -2,6 +2,10 @@
 
 Application web de suivi d'entraînement **Push / Pull / Legs**, en un seul fichier HTML, faite pour le téléphone.
 
+**Ouvrir l'app : https://mamzzz212.github.io/forge-ppl/**
+
+Sur téléphone, ajoute-la à l'écran d'accueil pour l'avoir comme une vraie app : sur iPhone (Safari), bouton Partager puis « Sur l'écran d'accueil » ; sur Android (Chrome), menu ⋮ puis « Ajouter à l'écran d'accueil ».
+
 ## Ce qu'elle fait
 
 - **Programme PPL en rotation** de 6 séances (Legs A → Push → Pull → Legs B → Push → Pull), 45 à 60 min, sans supersets, avec priorité aux jambes.
@@ -13,7 +17,7 @@ Application web de suivi d'entraînement **Push / Pull / Legs**, en un seul fich
 
 ## L'utiliser
 
-1. Ouvre `index.html` dans un navigateur (Chrome, Safari…).
+1. Ouvre le lien ci-dessus (ou `index.html` dans un navigateur).
 2. Touche l'icône profil en haut à droite et renseigne ton poids, ta taille et ton âge.
 3. Les charges de départ sont indicatives : ajuste-les pendant ta première séance pour garder 2 reps en réserve.
 
