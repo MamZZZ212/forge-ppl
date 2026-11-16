@@ -18,10 +18,16 @@ Sur téléphone, ajoute-la à l'écran d'accueil pour l'avoir comme une vraie ap
 ## L'utiliser
 
 1. Ouvre le lien ci-dessus (ou `index.html` dans un navigateur).
-2. Touche l'icône profil en haut à droite et renseigne ton poids, ta taille et ton âge.
-3. Les charges de départ sont indicatives : ajuste-les pendant ta première séance pour garder 2 reps en réserve.
+2. Crée ton profil avec ton prénom ou un pseudo.
+3. Touche ton initiale en haut à droite et renseigne ton poids, ta taille et ton âge.
+4. Les charges de départ sont indicatives : ajuste-les pendant ta première séance pour garder 2 reps en réserve.
 
-Tes données restent **dans ton navigateur**, sur ton appareil : rien n'est envoyé nulle part. Elles ne se synchronisent pas entre téléphone et ordinateur, et vider les données du navigateur les efface.
+## Profils et sauvegarde
+
+- Chaque profil a ses propres séances, pesées, cardio et nutrition. Plusieurs personnes peuvent avoir leur profil sur le même téléphone (initiale en haut à droite → Changer de profil).
+- Tes données restent **dans ton navigateur**, sur ton appareil : rien n'est envoyé nulle part.
+- **Exporter mes données** télécharge un fichier `.json`. Garde-le (Drive, iCloud, mail…) : avec **Importer**, tu retrouves ton profil sur un autre téléphone, un autre navigateur, ou après avoir vidé les données de ton navigateur.
+- L'app te rappelle de faire une sauvegarde si la dernière date de plus de 2 semaines.
 
 Le coach IA ne fonctionne que dans la version hébergée sur claude.ai.
 

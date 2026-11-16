@@ -61,6 +61,8 @@ p{margin:0}
 .sync i{width:8px;height:8px;border-radius:50%;background:var(--muted)}
 .sync.cloud i{background:var(--good)} .sync.local i{background:var(--warn)}
 .icon-btn{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:inline-grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:16px;flex:0 0 auto}
+.avatar.lg{width:42px;height:42px;font-size:22px}
 main#view{max-width:760px;margin:0 auto;padding-block:18px calc(var(--nav-h) + 28px + env(safe-area-inset-bottom,0px));
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--surface);border-top:1px solid var(--line);
@@ -285,6 +287,7 @@ table.prog td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
 <div id="restpill" class="restpill" hidden></div>
 <div id="sheet" hidden></div>
 <div id="toast" class="toast" hidden></div>
+<input type="file" id="importFile" accept=".json,application/json" hidden>
 
 <script>
 "use strict";
@@ -455,19 +458,44 @@ const S = {profile:{...DEFAULT_PROFILE}, sessions:[], body:[], food:{}, cardio:[
 let db = null;
 const pending = new Map();
 const writeQ = {};
-(function loadCache(){
-  const c = LS.get("forge-cache", null);
-  if (!c) return;
-  S.profile = {...DEFAULT_PROFILE, ...(c.profile||{})};
-  S.sessions = c.sessions || []; S.body = c.body || []; S.food = c.food || {}; S.cardio = c.cardio || [];
-})();
-function persistCache(){ LS.set("forge-cache", {profile:S.profile, sessions:S.sessions, body:S.body, food:S.food, cardio:S.cardio}); }
+/* ---- Profils : plusieurs personnes par appareil, chacune ses données ---- */
+const PROFILES_KEY = "forge-profiles";
+let PR = LS.get(PROFILES_KEY, null) || {list:[], active:null};
+const activeProfile = () => PR.list.find(p => p.id === PR.active) || null;
+const cacheKey = (id=PR.active) => "forge-cache:" + id;
+const DRAFT_KEY = () => "forge-draft:" + PR.active;
+function saveProfiles(){ LS.set(PROFILES_KEY, PR); }
+function applyData(c){
+  S.profile = {...DEFAULT_PROFILE, ...(c?.profile||{})};
+  S.sessions = Array.isArray(c?.sessions) ? c.sessions : []; S.body = Array.isArray(c?.body) ? c.body : [];
+  S.food = c?.food && typeof c.food === "object" ? c.food : {}; S.cardio = Array.isArray(c?.cardio) ? c.cardio : [];
+}
+function loadProfileData(){ applyData(PR.active ? LS.get(cacheKey(), null) : null); }
+function persistCache(){ if (PR.active) LS.set(cacheKey(), {profile:S.profile, sessions:S.sessions, body:S.body, food:S.food, cardio:S.cardio}); }
+const exportPayload = () => ({profile:S.profile, sessions:S.sessions, body:S.body, food:S.food, cardio:S.cardio});
+function createProfile(name, data=null){
+  const id = "p" + Date.now().toString(36);
+  PR.list.push({id, name:String(name).trim().slice(0,30) || "Moi", created:Date.now(), lastExport:null});
+  PR.active = id; saveProfiles();
+  if (data) LS.set(cacheKey(id), data);
+  loadProfileData();
+}
+function switchProfile(id){ if (!PR.list.some(p => p.id === id)) return; PR.active = id; saveProfiles(); loadProfileData(); W = null; foodDay = dayKey(); render(); }
+function deleteProfile(id){
+  LS.del(cacheKey(id)); LS.del("forge-draft:" + id);
+  PR.list = PR.list.filter(p => p.id !== id);
+  PR.active = PR.list[0]?.id || null; saveProfiles(); loadProfileData(); W = null; render();
+}
+// Ancienne version sans profil : on rattache ses données au premier profil créé.
+const LEGACY = PR.list.length ? null : LS.get("forge-cache", null);
+loadProfileData();
 function setMode(m){
   S.mode = m;
   const el = $("#sync");
   el.className = "sync " + m;
   el.lastElementChild.textContent = m === "cloud" ? "Synchronisé" : m === "local" ? "Sur cet appareil" : "Connexion…";
   el.title = m === "cloud" ? "Tes données sont sauvegardées et synchronisées entre ton ordinateur et ton téléphone." : m === "local" ? "Données gardées dans ce navigateur uniquement." : "";
+  if (m !== "cloud") renderProfileBadge();
 }
 async function flushWrite(path){
   const q = writeQ[path]; q.busy = true;
@@ -686,7 +714,36 @@ document.addEventListener("click", ev => {
   const v = a.getAttribute("href").slice(1); if (!VIEWS.includes(v)) return;
   ev.preventDefault(); go(v);
 });
+function renderProfileBadge(){
+  const p = activeProfile(), b = $("#btnProfile");
+  $(".tabs").hidden = !p;
+  b.hidden = !p;
+  if (!p) return;
+  b.innerHTML = `<span class="avatar">${h(p.name.trim().charAt(0).toUpperCase() || "?")}</span>`;
+  b.setAttribute("aria-label", `Profil de ${p.name}`);
+  const sync = $("#sync"); sync.lastElementChild.textContent = p.name; sync.title = "Profil actif. Tes données sont gardées sur cet appareil.";
+}
+function vWelcome(){
+  const others = PR.list.length;
+  return `<section class="hero" style="--sess:var(--accent);--sess-soft:var(--accent-soft)">
+    <p class="eyebrow">Push · Pull · Legs · cardio · nutrition</p>
+    <h1>Bienvenue</h1>
+    <p>Crée ton profil pour commencer. Tes séances, ton poids et ta nutrition seront enregistrés sous ce nom, sur cet appareil.</p>
+    <form id="welcomeForm" class="row" style="align-items:flex-end">
+      <div class="field" style="flex:1 1 200px"><label for="wl-name">Ton prénom ou pseudo</label><input class="input" id="wl-name" maxlength="30" autocomplete="nickname" placeholder="ex. Karim" required></div>
+      <button class="btn btn-primary" type="submit">Créer mon profil</button>
+    </form>
+    ${LEGACY ? `<p class="small muted">Des données d'une version précédente ont été trouvées : elles seront rattachées à ce profil.</p>` : ""}
+  </section>
+  <section class="card"><div class="card-h"><h2>Déjà une sauvegarde ?</h2></div>
+    <p class="small muted">Tu as exporté tes données depuis un autre téléphone ou navigateur ? Importe le fichier .json pour retrouver ton profil.</p>
+    <button class="btn" data-act="import" style="align-self:flex-start">Importer une sauvegarde</button>
+    ${others ? `<p class="small muted">${others} autre(s) profil(s) sur cet appareil.</p>` : ""}
+  </section>`;
+}
 function render(){
+  renderProfileBadge();
+  if (!activeProfile()) { $("#view").innerHTML = vWelcome(); return; }
   const v = curView(), view = $("#view");
   const keep = {}; $$("input[id],select[id],textarea[id]", view).forEach(el => keep[el.id] = el.value);
   const act = document.activeElement && view.contains(document.activeElement) ? document.activeElement.id : null;
@@ -702,7 +759,7 @@ function softRender(){ if (curView() === "coach") return; clearTimeout(softRende
 /* ---------- HOME ---------- */
 function vHome(){
   const id = ROT[nextRotIndex()], tpl = SESSIONS[id], tg = targets(), today = dayKey();
-  const draft = LS.get("forge-draft", null);
+  const draft = LS.get(DRAFT_KEY(), null);
   const dt = dayTotals(today);
   const mon = mondayOf(); const doneDays = new Set(S.sessions.filter(s => new Date(s.date) >= mon).map(s => dayKey(new Date(s.date))));
   const weekCount = S.sessions.filter(s => new Date(s.date) >= mon).length;
@@ -716,7 +773,7 @@ function vHome(){
   return `
   ${draft ? `<div class="banner"><div><b>Séance ${h(SESSIONS[draft.sessionId]?.name)} en cours</b><p class="small muted">Commencée à ${new Date(draft.startedAt).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}</p></div><button class="btn btn-primary btn-sm" data-act="resume">Reprendre</button></div>` : ""}
   ${!S.profile.kg && !S.body.length ? `<div class="banner" style="background:var(--pull-soft);border-color:var(--pull)"><div><b>Configure ton profil</b><p class="small muted">Poids, taille, âge : pour calculer tes protéines et tes calories.</p></div><button class="btn btn-sm" data-act="profile">Configurer</button></div>` : ""}
-  <p class="eyebrow">${h(greeting)} · semaine ${wk}${inReprise() ? " · phase de démarrage" : ""}</p>
+  <p class="eyebrow">Salut ${h(activeProfile()?.name || "")} · ${h(greeting)} · semaine ${wk}${inReprise() ? " · phase de démarrage" : ""}</p>
   ${wk > 1 && wk % 7 === 0 ? `<div class="banner" style="background:var(--legs-soft);border-color:var(--legs)"><div><b>Semaine de décharge conseillée</b><p class="small muted">Mêmes charges, 2 séries par exercice au lieu de 3. Tu repars plus fort la semaine suivante.</p></div></div>` : ""}
   <section class="hero" style="${sessColor(id)}">
     <div class="spread"><span class="eyebrow">Prochaine séance</span><span class="chip">${rotStart+1}/6 de la rotation</span></div>
@@ -756,6 +813,9 @@ function insights(){
   if (lc.legs != null && lc.upper != null) out.push([lc.legs >= lc.upper ? "good" : "warn","J",`Rattrapage jambes : force <b>${pct(lc.legs)}</b> sur les jambes contre ${pct(lc.upper)} sur le haut depuis la reprise. ${lc.legs >= lc.upper ? "Les jambes progressent plus vite, c'est le but." : "Les jambes doivent progresser plus vite que le haut : pousse fort sur le hack squat et la presse."}`]);
   else out.push(["warn","J","Jambes prioritaires : 2 séances jambes par rotation, hack squat en premier. Le KPI « rattrapage jambes » apparaît après 2 séances de chaque type."]);
   if (inReprise()) out.push(["info","R","Phase de démarrage (3 premières semaines) : calibre tes charges. Quand toutes les séries touchent le haut de la fourchette, la charge monte deux fois plus vite."]);
+  const ap = activeProfile();
+  if (ap && S.sessions.length >= 3 && (!ap.lastExport || Date.now() - ap.lastExport > 14*DAY))
+    out.unshift(["warn","S",`Tes données ne sont que sur cet appareil. ${ap.lastExport ? "Dernière sauvegarde il y a plus de 2 semaines." : "Tu n'as jamais fait de sauvegarde."} <button class="btn btn-sm" data-act="export" style="margin-top:6px">Exporter mes données</button>`]);
   return out.slice(0, 6);
 }
 
@@ -1143,7 +1203,7 @@ async function askCoach(text){
 
 /* ================= WORKOUT ================= */
 let W = null, elapsedT = null, rest = null, restT = null, wakeLock = null;
-function saveDraft(){ if (W) LS.set("forge-draft", W); }
+function saveDraft(){ if (W) LS.set(DRAFT_KEY(), W); }
 function startWorkout(id){
   const tpl = SESSIONS[id];
   W = {sessionId:id, rot:rotIndexFor(id), startedAt:Date.now(), entries: tpl.items.map(it => { const t = nextTarget(it); return {ex:it.ex, feel:null, t, sets:Array.from({length:it.sets}, () => ({w:t.w, r:t.reps, done:false}))}; })};
@@ -1272,7 +1332,7 @@ function finishWorkout(){
   if (!doneSets) {
     openSheet(`<h2>Aucune série validée</h2><p>Valide tes séries avec le bouton ✓ pour qu'elles soient enregistrées. Tu veux abandonner cette séance ?</p>
       <div class="row"><button class="btn btn-primary" data-s="abandon">Abandonner la séance</button><button class="btn" data-close>Continuer</button></div>`, sh => {
-      sh.querySelector('[data-s="abandon"]').onclick = () => { LS.del("forge-draft"); W = null; closeSheet(); closeWorkout(); };
+      sh.querySelector('[data-s="abandon"]').onclick = () => { LS.del(DRAFT_KEY()); W = null; closeSheet(); closeWorkout(); };
     });
     return;
   }
@@ -1282,7 +1342,7 @@ function finishWorkout(){
     entries: W.entries.map(e => ({ex:e.ex, feel:e.feel, sets:e.sets.filter(s => s.done).map(s => ({w:+s.w||0, r:+s.r||0}))})).filter(e => e.sets.length)};
   S.sessions = [...S.sessions, log];
   writeDoc("sessions/" + log.id, log);
-  const sid = W.sessionId; LS.del("forge-draft"); W = null; stopRest();
+  const sid = W.sessionId; LS.del(DRAFT_KEY()); W = null; stopRest();
   closeWorkout();
   const vol = log.entries.filter(e => isLift(e.ex)).reduce((a,e) => a + e.sets.reduce((b,x) => b + x.w*x.r, 0), 0);
   const prs = log.entries.filter(e => isLift(e.ex) && before[e.ex] && Math.max(...e.sets.map(x => e1rm(x.w, x.r))) > before[e.ex] + 0.01);
@@ -1305,8 +1365,15 @@ function closeSheet(){ const sh = $("#sheet"); sh.hidden = true; sh.innerHTML = 
 document.addEventListener("keydown", ev => { if (ev.key === "Escape" && !$("#sheet").hidden) closeSheet(); });
 function profileSheet(){
   const p = S.profile, tg = targets();
+  const ap = activeProfile();
   openSheet(`<h2>Profil & objectifs</h2>
+    <section class="card" style="gap:10px">
+      <div class="spread"><span class="row" style="gap:10px"><span class="avatar lg">${h(ap.name.charAt(0).toUpperCase())}</span><span><b>${h(ap.name)}</b><br><span class="small muted">${S.sessions.length} séance(s) · ${ap.lastExport ? "sauvegardé le " + fmtDate(new Date(ap.lastExport).toISOString()) : "jamais sauvegardé"}</span></span></span></div>
+      <div class="row"><button class="btn btn-sm" type="button" data-p="export">Exporter mes données</button><button class="btn btn-sm" type="button" data-p="import">Importer</button><button class="btn btn-sm" type="button" data-p="switch">Changer de profil</button></div>
+      <p class="small muted">Tes données restent sur cet appareil. Exporte-les régulièrement : le fichier te permet de les retrouver sur un autre téléphone ou après avoir vidé ton navigateur.</p>
+    </section>
     <form id="pf" style="display:flex;flex-direction:column;gap:12px">
+      <div class="field"><label for="pf-name">Nom du profil</label><input class="input" id="pf-name" maxlength="30" value="${h(ap.name)}" required></div>
       <div class="grid2">
         <div class="field"><label for="pf-kg">Poids (kg)</label><input class="input num" id="pf-kg" type="number" step="0.1" inputmode="decimal" value="${p.kg ?? (tg.bw ? fmt(tg.bw).replace(",", ".") : "")}"></div>
         <div class="field"><label for="pf-h">Taille (cm)</label><input class="input num" id="pf-h" type="number" inputmode="numeric" value="${p.heightCm ?? ""}"></div>
@@ -1320,8 +1387,13 @@ function profileSheet(){
       <p class="small muted">Calories auto = métabolisme (Mifflin-St Jeor) × activité + 250 kcal en prise de muscle.</p>
       <div class="row"><button class="btn btn-primary" type="submit" style="flex:1">Enregistrer</button><button class="btn" type="button" data-close>Annuler</button></div>
     </form>`, sh => {
+    sh.querySelector('[data-p="export"]').onclick = () => exportData();
+    sh.querySelector('[data-p="import"]').onclick = () => pickImport();
+    sh.querySelector('[data-p="switch"]').onclick = () => profilesSheet();
     sh.querySelector("#pf").onsubmit = ev => {
       ev.preventDefault();
+      const nm = sh.querySelector("#pf-name").value.trim().slice(0,30);
+      if (nm && nm !== ap.name) { ap.name = nm; saveProfiles(); }
       const num = id => { const v = sh.querySelector(id).value; return v === "" ? null : +v; };
       const kg = num("#pf-kg");
       saveProfile({kg, heightCm:num("#pf-h"), age:num("#pf-age"), sex:sh.querySelector("#pf-sex").value, perWeek:+sh.querySelector("#pf-week").value, goal:sh.querySelector("#pf-goal").value, ppk:+sh.querySelector("#pf-ppk").value, kcalOverride:num("#pf-kcal")});
@@ -1329,6 +1401,57 @@ function profileSheet(){
       closeSheet(); render(); toast("Profil enregistré");
     };
   });
+}
+function profilesSheet(){
+  openSheet(`<h2>Profils sur cet appareil</h2>
+    <div style="display:flex;flex-direction:column;gap:8px">${PR.list.map(p => `<button class="btn btn-block" data-sw="${h(p.id)}" style="justify-content:space-between"><span class="row" style="gap:10px"><span class="avatar">${h(p.name.charAt(0).toUpperCase())}</span>${h(p.name)}</span>${p.id === PR.active ? `<span class="chip up">actif</span>` : ""}</button>`).join("")}</div>
+    <form id="np" class="row" style="align-items:flex-end">
+      <div class="field" style="flex:1 1 180px"><label for="np-name">Nouveau profil</label><input class="input" id="np-name" maxlength="30" placeholder="Prénom ou pseudo" required></div>
+      <button class="btn btn-primary" type="submit">Créer</button>
+    </form>
+    <button class="btn btn-ghost" data-p="del" style="color:var(--bad);align-self:flex-start">Supprimer le profil « ${h(activeProfile()?.name)} »</button>
+    <button class="btn" data-close>Fermer</button>`, sh => {
+    sh.querySelectorAll("[data-sw]").forEach(b => b.onclick = () => { closeSheet(); switchProfile(b.dataset.sw); toast(`Profil : ${activeProfile().name}`); });
+    sh.querySelector("#np").onsubmit = ev => { ev.preventDefault(); const n = sh.querySelector("#np-name").value.trim(); if (!n) return; createProfile(n); closeSheet(); W = null; render(); toast(`Profil ${n} créé`); };
+    sh.querySelector('[data-p="del"]').onclick = () => {
+      const p = activeProfile();
+      openSheet(`<h2>Supprimer « ${h(p.name)} » ?</h2><p>Toutes ses séances, pesées et données nutrition seront effacées de cet appareil. C'est définitif, sauf si tu as exporté une sauvegarde.</p>
+        <div class="row"><button class="btn btn-primary" data-s="del" style="background:var(--bad);border-color:var(--bad)">Supprimer définitivement</button><button class="btn" data-close>Annuler</button></div>`, s2 => {
+        s2.querySelector('[data-s="del"]').onclick = () => { deleteProfile(p.id); closeSheet(); toast("Profil supprimé"); };
+      });
+    };
+  });
+}
+function exportData(){
+  const p = activeProfile(); if (!p) return;
+  const payload = {app:"forge-ppl", v:1, exportedAt:new Date().toISOString(), name:p.name, data:exportPayload()};
+  const slug = p.name.normalize("NFD").replace(/[^\w-]+/g, "-").replace(/-+/g, "-").toLowerCase() || "profil";
+  try {
+    const url = URL.createObjectURL(new Blob([JSON.stringify(payload)], {type:"application/json"}));
+    const a = document.createElement("a"); a.href = url; a.download = `forge-ppl-${slug}-${dayKey()}.json`;
+    document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000);
+    p.lastExport = Date.now(); saveProfiles(); render(); toast("Sauvegarde téléchargée");
+  } catch { toast("Export impossible sur ce navigateur"); }
+}
+function pickImport(){ const inp = $("#importFile"); inp.value = ""; inp.click(); }
+function readImport(file){
+  const fr = new FileReader();
+  fr.onload = () => {
+    let p; try { p = JSON.parse(fr.result); } catch { return toast("Fichier illisible : choisis un export Forge PPL (.json)"); }
+    if (p?.app !== "forge-ppl" || !p.data || !Array.isArray(p.data.sessions)) return toast("Ce fichier n'est pas une sauvegarde Forge PPL");
+    const name = String(p.name || "Profil importé").slice(0,30);
+    const summary = `${p.data.sessions.length} séance(s), ${(p.data.body||[]).length} pesée(s), ${(p.data.cardio||[]).length} cardio · exporté le ${fmtDate(p.exportedAt || new Date().toISOString())}`;
+    const asNew = () => { createProfile(name, p.data); closeSheet(); W = null; render(); toast(`Profil ${name} importé`); };
+    if (!activeProfile()) return asNew();
+    openSheet(`<h2>Importer « ${h(name)} »</h2><p class="small muted">${h(summary)}</p>
+      <div style="display:flex;flex-direction:column;gap:8px"><button class="btn btn-primary" data-s="new">Créer un nouveau profil « ${h(name)} »</button>
+      <button class="btn" data-s="replace">Remplacer les données de « ${h(activeProfile().name)} »</button><button class="btn btn-ghost" data-close>Annuler</button></div>
+      <p class="small muted">Remplacer efface définitivement les données actuelles de ce profil sur cet appareil.</p>`, sh => {
+      sh.querySelector('[data-s="new"]').onclick = asNew;
+      sh.querySelector('[data-s="replace"]').onclick = () => { applyData(p.data); persistCache(); closeSheet(); render(); toast("Données remplacées"); };
+    });
+  };
+  fr.readAsText(file);
 }
 function weighSheet(){
   const last = S.body[S.body.length-1];
@@ -1349,23 +1472,26 @@ function chooseSheet(){
   });
 }
 function tryStart(id){
-  if (LS.get("forge-draft", null)) {
+  if (LS.get(DRAFT_KEY(), null)) {
     openSheet(`<h2>Séance déjà en cours</h2><p>Une séance non terminée est en mémoire. La remplacer par ${h(SESSIONS[id].name)} ?</p><div class="row"><button class="btn btn-primary" data-s="go">Remplacer</button><button class="btn" data-s="resume">Reprendre l'ancienne</button></div>`, sh => {
       sh.querySelector('[data-s="go"]').onclick = () => { closeSheet(); startWorkout(id); };
-      sh.querySelector('[data-s="resume"]').onclick = () => { closeSheet(); W = LS.get("forge-draft", null); if (W) openWorkout(); };
+      sh.querySelector('[data-s="resume"]').onclick = () => { closeSheet(); W = LS.get(DRAFT_KEY(), null); if (W) openWorkout(); };
     });
   } else startWorkout(id);
 }
 
 /* ================= EVENTS ================= */
 $("#btnProfile").onclick = profileSheet;
+$("#importFile").addEventListener("change", ev => { const f = ev.target.files?.[0]; if (f) readImport(f); });
 $("#view").addEventListener("click", ev => {
   const b = ev.target.closest("[data-act]"); if (!b) return;
   const a = b.dataset.act;
   if (a === "start") tryStart(b.dataset.id);
-  else if (a === "resume") { W = LS.get("forge-draft", null); if (W) openWorkout(); }
+  else if (a === "resume") { W = LS.get(DRAFT_KEY(), null); if (W) openWorkout(); }
   else if (a === "choose") chooseSheet();
   else if (a === "profile") profileSheet();
+  else if (a === "export") exportData();
+  else if (a === "import") pickImport();
   else if (a === "weigh") weighSheet();
   else if (a === "fday") { const n = addDays(foodDay, +b.dataset.d); if (n <= dayKey()) { foodDay = n; render(); } }
   else if (a === "qa") { const f = FOODS[+b.dataset.i]; addFood(foodDay, {n:f[0], p:f[1], k:f[2]}); render(); toast(`+${f[1]} g de protéines`); }
@@ -1393,6 +1519,13 @@ $("#view").addEventListener("click", ev => {
 $("#view").addEventListener("change", ev => { if (ev.target.id === "pg-ex") { chartEx = ev.target.value; drawCharts(); } });
 $("#view").addEventListener("submit", ev => {
   ev.preventDefault();
+  if (ev.target.id === "welcomeForm") {
+    const n = $("#wl-name").value.trim(); if (!n) return;
+    createProfile(n, LEGACY);
+    if (LEGACY) LS.del("forge-cache");
+    go("home"); toast(`Bienvenue ${n} ! Renseigne ton poids dans le profil.`);
+    return;
+  }
   if (ev.target.id === "foodForm") {
     const n = $("#ff-n").value.trim(), p = +$("#ff-p").value, k = +$("#ff-k").value || 0;
     if (!n || !(p >= 0)) return;
@@ -1411,8 +1544,8 @@ window.addEventListener("hashchange", () => { const v = location.hash.slice(1); 
 /* ================= BOOT ================= */
 render();
 initRuntime();
-const draft0 = LS.get("forge-draft", null);
-if (draft0 && Date.now() - draft0.startedAt > 12*3600*1000) LS.del("forge-draft");
+const draft0 = LS.get(DRAFT_KEY(), null);
+if (draft0 && Date.now() - draft0.startedAt > 12*3600*1000) LS.del(DRAFT_KEY());
 </script>
 
 </body>
