@@ -8,7 +8,7 @@ Sur téléphone, ajoute-la à l'écran d'accueil pour l'avoir comme une vraie ap
 
 ## Ce qu'elle fait
 
-- **Programme PPL en rotation** de 6 séances (Legs A → Push → Pull → Legs B → Push → Pull), 45 à 60 min, sans supersets, avec priorité aux jambes.
+- **Programme en rotation de 4 séances** : Push → Pull → Legs → Accessoires (épaules, bras, gainage puis mobilité guidée), 45 à 60 min, sans supersets.
 - **Progression automatique des charges** (double progression) : tu notes tes charges, tes reps et ton ressenti, et l'app calcule la séance suivante.
 - **Échauffement à l'élastique** au début de chaque séance, **gainage** (farmer's walk, suitcase carry, Pallof press) et **routine mobilité guidée** pour les hanches et le dos.
 - **Cardio par niveaux** pour devenir hybride : footing en zone 2, fractionné, tapis incliné.

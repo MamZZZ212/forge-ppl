@@ -18,7 +18,7 @@
 :root{
   --bg:#EEF0F4; --surface:#FFFFFF; --surface-2:#E4E7EE; --ink:#111725; --muted:#596277; --line:#D5D9E2;
   --accent:#C8233A; --accent-soft:#F9E1E5; --on-accent:#FFFFFF;
-  --pull:#2952C7; --pull-soft:#E0E8FB; --legs:#B86E06; --legs-soft:#FBEBD2; --teal:#0F8466; --teal-soft:#D8F1E9;
+  --pull:#2952C7; --pull-soft:#E0E8FB; --legs:#B86E06; --legs-soft:#FBEBD2; --acc:#6D46C9; --acc-soft:#ECE5FB; --teal:#0F8466; --teal-soft:#D8F1E9;
   --good:#0F8466; --warn:#B86E06; --bad:#C0392B;
   --shadow:0 1px 2px rgba(17,23,37,.06),0 4px 14px rgba(17,23,37,.06);
   --f-display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
@@ -28,12 +28,12 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0C0F17; --surface:#151A26; --surface-2:#1E2433; --ink:#E8EBF2; --muted:#8F98AC; --line:#283043;
   --accent:#FF5266; --accent-soft:#3A1A22; --on-accent:#14080B;
-  --pull:#7FA0FF; --pull-soft:#1B2647; --legs:#F2A93B; --legs-soft:#3A2A12; --teal:#35C99E; --teal-soft:#123328;
+  --pull:#7FA0FF; --pull-soft:#1B2647; --legs:#F2A93B; --legs-soft:#3A2A12; --acc:#B49CFF; --acc-soft:#2A2147; --teal:#35C99E; --teal-soft:#123328;
   --good:#35C99E; --warn:#F2A93B; --bad:#FF6B5B; --shadow:0 1px 2px rgba(0,0,0,.4); color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0C0F17; --surface:#151A26; --surface-2:#1E2433; --ink:#E8EBF2; --muted:#8F98AC; --line:#283043;
   --accent:#FF5266; --accent-soft:#3A1A22; --on-accent:#14080B;
-  --pull:#7FA0FF; --pull-soft:#1B2647; --legs:#F2A93B; --legs-soft:#3A2A12; --teal:#35C99E; --teal-soft:#123328;
+  --pull:#7FA0FF; --pull-soft:#1B2647; --legs:#F2A93B; --legs-soft:#3A2A12; --acc:#B49CFF; --acc-soft:#2A2147; --teal:#35C99E; --teal-soft:#123328;
   --good:#35C99E; --warn:#F2A93B; --bad:#FF6B5B; --shadow:0 1px 2px rgba(0,0,0,.4); color-scheme:dark}
 *{box-sizing:border-box}
 html,body{background:var(--bg)}
@@ -375,16 +375,25 @@ const SESSIONS = {
     {ex:"pulldown",sets:3,min:8,max:10,rest:120},{ex:"csrow",sets:3,min:8,max:10,rest:120},{ex:"cablerow",sets:3,min:10,max:12,rest:90},
     {ex:"reardelt",sets:3,min:12,max:15,rest:60},{ex:"incurl",sets:3,min:10,max:12,rest:75},{ex:"hammer",sets:2,min:10,max:12,rest:75},
     {ex:"farmers",sets:3,min:30,max:45,rest:75}]},
-  legsA:{name:"Legs A",sub:"Quadriceps · priorité jambes",c:"legs",items:[
+  legs:{name:"Legs",sub:"Quadriceps · fessiers · ischios",c:"legs",items:[
+    {ex:"hacksquat",sets:3,min:6,max:8,rest:180},{ex:"hipthrust",sets:3,min:8,max:12,rest:120},{ex:"legpress",sets:3,min:10,max:12,rest:120},
+    {ex:"seatedcurl",sets:3,min:10,max:12,rest:75},{ex:"legext",sets:2,min:12,max:15,rest:75},{ex:"calf",sets:3,min:12,max:16,rest:60}]},
+  acc:{name:"Accessoires",sub:"Épaules · bras · gainage · mobilité",c:"acc",mob:true,items:[
+    {ex:"latraise",sets:3,min:12,max:15,rest:60},{ex:"reardelt",sets:3,min:12,max:15,rest:60},{ex:"incurl",sets:3,min:10,max:12,rest:75},
+    {ex:"pushdown",sets:3,min:10,max:14,rest:75},{ex:"hammer",sets:2,min:10,max:12,rest:60},{ex:"ohext",sets:2,min:10,max:12,rest:60},
+    {ex:"pallof",sets:2,min:10,max:12,rest:45}]},
+  // Anciennes séances (rotation à 6), gardées pour afficher l'historique.
+  legsA:{old:true,name:"Legs A",sub:"Quadriceps · priorité jambes",c:"legs",items:[
     {ex:"hacksquat",sets:3,min:6,max:8,rest:180},{ex:"legpress",sets:3,min:10,max:12,rest:120},{ex:"bss",sets:2,min:8,max:10,rest:90},
     {ex:"legext",sets:3,min:12,max:15,rest:75},{ex:"legcurl",sets:3,min:10,max:12,rest:75},{ex:"calf",sets:3,min:12,max:16,rest:60}]},
-  legsB:{name:"Legs B",sub:"Fessiers · ischios · gainage, zéro charge lombaire",c:"legs",items:[
+  legsB:{old:true,name:"Legs B",sub:"Fessiers · ischios · gainage, zéro charge lombaire",c:"legs",items:[
     {ex:"hipthrust",sets:3,min:8,max:12,rest:120},{ex:"legpressH",sets:3,min:10,max:12,rest:120},{ex:"seatedcurl",sets:3,min:10,max:12,rest:75},
     {ex:"lunge",sets:2,min:10,max:12,rest:90},{ex:"legext",sets:2,min:12,max:15,rest:75},{ex:"calf",sets:3,min:12,max:16,rest:60},
     {ex:"suitcase",sets:2,min:30,max:40,rest:60}]},
 };
 // Échauffement : élastique + mobilité spécifique, ~8 min, coché dans la séance.
 const WARMUPS = {
+  acc:[["Cardio léger (vélo, rameur ou tapis)","4 min"],["Band pull-aparts à l'élastique","2 × 15"],["Rotations externes à l'élastique","12 / côté"],["Élévations latérales à l'élastique","15"],["Curls à l'élastique","15"],["Extensions triceps à l'élastique","15"],["Séries d'approche aux élévations latérales","1 × 12 léger"]],
   push:[["Cardio léger (vélo, rameur ou tapis)","4 min"],["Band pull-aparts à l'élastique","2 × 15"],["Dislocations d'épaules à l'élastique","10"],["Rotations externes à l'élastique","12 / côté"],["Pompes scapulaires","10"],["Cat-cow (dos rond / dos creux, doux)","8"],["Séries d'approche au développé couché","50 % × 10 puis 75 % × 5"]],
   pull:[["Cardio léger (vélo, rameur ou tapis)","4 min"],["Band pull-aparts à l'élastique","2 × 15"],["Face pull à l'élastique","15"],["Open book thoracique (allongé sur le côté)","6 / côté"],["Bird dog, 3 s de tenue","6 / côté"],["Suspension passive à la barre","2 × 20 s"],["Séries d'approche au tirage vertical","50 % × 10 puis 75 % × 5"]],
   legs:[["Vélo léger","4 min"],["Cercles de hanche (hip CARs), à 4 pattes","5 / côté"],["90/90 hip switches","8"],["Couch stretch (fléchisseurs de hanche)","30 s / côté"],["Pont fessier, élastique au-dessus des genoux","15"],["Marche latérale à l'élastique (monster walk)","10 pas / côté"],["Dead bug, bas du dos plaqué au sol","6 / côté"],["Squat au poids du corps, pause 3 s en bas","8"],["Séries d'approche sur le 1er exercice","50 % × 10 puis 75 % × 5"]],
@@ -423,7 +432,9 @@ const CARDIO = {
     lv:[25,30,35,40,45].map(m => ({min:m, txt:`${m} min de marche à 5 km/h, inclinaison 8–10 %, sans te tenir aux barres.`}))},
 };
 const CARDIO_TARGET_MIN = 100;
-const ROT = ["legsA","push","pull","legsB","push","pull"];
+const ROT = ["push","pull","legs","acc"];
+const ROT_KEY = id => (id === "legsA" || id === "legsB") ? "legs" : id; // anciennes séances jambes → Legs
+const activeSessions = () => Object.entries(SESSIONS).filter(([,s]) => !s.old);
 const KEY_LIFTS = ["bench","incdb","pulldown","legpress","legext","legcurl"]; 
 const CHART_LIFTS = ["hacksquat","bench","pulldown","csrow","hipthrust","legpress","incdb"];
 const FOODS = [
@@ -638,12 +649,12 @@ function estMinutes(id){
   return Math.round(sec/60/5)*5;
 }
 const setCount = id => SESSIONS[id].items.reduce((a,x) => a + x.sets, 0);
-function lastRotIndex(){
-  for (let i = S.sessions.length-1; i >= 0; i--) if (Number.isInteger(S.sessions[i].rot)) return S.sessions[i].rot;
-  return -1;
+// La prochaine séance suit la dernière faite dans la rotation (quel que soit le jour).
+function nextRotIndex(){
+  for (let i = S.sessions.length-1; i >= 0; i--) { const k = ROT.indexOf(ROT_KEY(S.sessions[i].sessionId)); if (k >= 0) return (k+1) % ROT.length; }
+  return 0;
 }
-const nextRotIndex = () => (lastRotIndex() + 1) % ROT.length;
-function rotIndexFor(id){ const start = nextRotIndex(); for (let k = 0; k < ROT.length; k++) { const i = (start+k) % ROT.length; if (ROT[i] === id) return i; } return start; }
+const rotIndexFor = id => Math.max(0, ROT.indexOf(id));
 function bestE1(exId, sinceMs=0){
   let b = 0;
   for (const s of S.sessions) { if (new Date(s.date).getTime() < sinceMs) continue; const e = (s.entries||[]).find(x => x.ex === exId); if (!e) continue; for (const st of e.sets) b = Math.max(b, e1rm(+st.w, +st.r)); }
@@ -792,9 +803,9 @@ function vHome(){
   <p class="eyebrow">Salut ${h(activeProfile()?.name || "")} · ${h(greeting)} · semaine ${wk}${inReprise() ? " · phase de démarrage" : ""}</p>
   ${wk > 1 && wk % 7 === 0 ? `<div class="banner" style="background:var(--legs-soft);border-color:var(--legs)"><div><b>Semaine de décharge conseillée</b><p class="small muted">Mêmes charges, 2 séries par exercice au lieu de 3. Tu repars plus fort la semaine suivante.</p></div></div>` : ""}
   <section class="hero" style="${sessColor(id)}">
-    <div class="spread"><span class="eyebrow">Prochaine séance</span><span class="chip">${rotStart+1}/6 de la rotation</span></div>
+    <div class="spread"><span class="eyebrow">Prochaine séance</span><span class="chip">${rotStart+1}/${ROT.length} de la rotation</span></div>
     <div><h1>${h(tpl.name)}</h1><p class="sub">${h(tpl.sub)}</p></div>
-    <div class="meta"><span><b class="num">~${estMinutes(id)}</b> min</span><span><b>${tpl.items.length}</b> exercices</span><span><b>${setCount(id)}</b> séries</span><span>sans superset</span></div>
+    <div class="meta"><span><b class="num">~${estMinutes(id)}</b> min</span><span><b>${tpl.items.length}</b> exercices</span><span><b>${setCount(id)}</b> séries</span><span>sans superset</span>${tpl.mob ? `<span>+ <b>${mobMinutes()}</b> min de mobilité</span>` : ""}</div>
     <div class="ex-list">${items.map(({it,t}) => `
       <div class="ex-li"><span class="nm">${h(EX[it.ex].name)}</span>
         <span class="tg"><b class="num">${fmt(t.w)} kg</b>${chipFor(t)}</span>
@@ -827,7 +838,7 @@ function insights(){
   if (lastC && (+lastC.back||0) >= 4) out.push(["bad","D",`Ton bas du dos était à <b>${lastC.back}/10</b> au dernier cardio. Prochaine séance : tapis incliné, et fais la routine mobilité. Si la douleur dure plus de 2 semaines, descend dans la jambe ou s'accompagne de fourmillements, consulte un médecin ou un kiné.`]);
   out.push([cw.min >= CARDIO_TARGET_MIN ? "good" : "info","C",`Cardio : <b>${cw.min} min</b> cette semaine sur ${CARDIO_TARGET_MIN}, et ${cw.mob} séance(s) de mobilité sur 3. Prochaine sortie : <a href="#cardio">${h(CARDIO[nextCardioType()].name)}</a>, ${CARDIO[nextCardioType()].lv[cardioLevel(nextCardioType())].min} min.`]);
   if (lc.legs != null && lc.upper != null) out.push([lc.legs >= lc.upper ? "good" : "warn","J",`Rattrapage jambes : force <b>${pct(lc.legs)}</b> sur les jambes contre ${pct(lc.upper)} sur le haut depuis la reprise. ${lc.legs >= lc.upper ? "Les jambes progressent plus vite, c'est le but." : "Les jambes doivent progresser plus vite que le haut : pousse fort sur le hack squat et la presse."}`]);
-  else out.push(["warn","J","Jambes prioritaires : 2 séances jambes par rotation, hack squat en premier. Le KPI « rattrapage jambes » apparaît après 2 séances de chaque type."]);
+  else out.push(["warn","J","Une seule séance jambes par semaine : pousse fort sur le hack squat et le hip thrust, c'est là que se joue le rattrapage. Le KPI « rattrapage jambes » apparaît après 2 séances de chaque exercice."]);
   if (inReprise()) out.push(["info","R","Phase de démarrage (3 premières semaines) : calibre tes charges. Quand toutes les séries touchent le haut de la fourchette, la charge monte deux fois plus vite."]);
   const ap = activeProfile();
   if (ap && S.sessions.length >= 3 && (!ap.lastExport || Date.now() - ap.lastExport > 14*DAY))
@@ -837,8 +848,8 @@ function insights(){
 
 /* ---------- PROGRAM ---------- */
 function vProgram(){
-  return `<div><p class="eyebrow">Push · Pull · Legs, rotation de 6 séances</p><h1 class="sec-title">Programme</h1></div>
-  <section class="card"><p>Tu enchaînes les séances dans l'ordre, quel que soit le jour : <b>Legs A → Push → Pull → Legs B → Push → Pull</b>, puis on recommence. À 4 séances par semaine, chaque muscle est travaillé ~1,3 fois par semaine ; à 5–6 séances, presque 2 fois. Les jambes ont deux séances différentes par rotation : c'est souvent le point faible.</p>
+  return `<div><p class="eyebrow">Push · Pull · Legs · Accessoires, rotation de 4 séances</p><h1 class="sec-title">Programme</h1></div>
+  <section class="card"><p>Tu enchaînes les séances dans l'ordre, quel que soit le jour : <b>Push → Pull → Legs → Accessoires</b>, puis on recommence. À 4 séances par semaine, tu fais chaque séance une fois : les jambes une fois, et les épaules et les bras deux fois (dans Push ou Pull, puis en Accessoires). La séance Accessoires se termine par la routine mobilité hanches et dos.</p>
   <div class="principles">
     <div class="pr"><b>Double progression</b>Chaque exo a une fourchette (ex. 8–10). Même charge tant que tu n'as pas le haut de la fourchette sur toutes les séries, puis la charge monte et tu repars en bas.</div>
     <div class="pr"><b>Intensité</b>Arrête chaque série à 1–2 reps de l'échec (RIR 1–2). Dernière série des exos d'isolation : jusqu'à l'échec propre.</div>
@@ -850,7 +861,7 @@ function vProgram(){
     <div class="pr"><b>Décharge</b>Toutes les 7 semaines (ou si tout stagne), une semaine à 2 séries par exo, mêmes charges.</div>
   </div>
   <p class="small muted">Photos des exercices : free-exercise-db (domaine public). Touche une photo pour l'agrandir.</p></section>
-  ${Object.entries(SESSIONS).map(([id,s]) => `
+  ${activeSessions().map(([id,s]) => `
   <section class="card sess-card" style="${sessColor(id)}">
     <div class="card-h"><h2 style="color:var(--sess)">${s.name}</h2><span class="small muted">${s.sub} · ~${estMinutes(id)} min · ${setCount(id)} séries</span></div>
     <div class="tbl-wrap"><table class="prog"><thead><tr><th>Exercice</th><th>Séries × reps</th><th>Repos</th><th>Prochaine charge</th></tr></thead><tbody>
@@ -1060,7 +1071,7 @@ function vProgress(){
     <div class="chart" data-chart="e1rm"></div></section>
   <section class="card"><div class="card-h"><h2>Volume de la semaine</h2><span class="small muted">séries par muscle · zone 10–20</span></div>
     ${Object.entries(MUSCLES).map(([m,label]) => { const v = ws[m], max = 24; return `<div class="vol-row"><span>${label}</span><div class="vol-track"><span class="zone" style="left:${10/max*100}%;width:${10/max*100}%"></span><i style="width:${Math.min(100,v/max*100)}%"></i></div><span class="num" style="text-align:right;font-weight:600">${v}</span></div>`; }).join("")}
-    <p class="small muted">Sous 10 séries par semaine, un muscle progresse lentement. Les ischios et fessiers ne sont travaillés qu'en Legs A et Legs B : passer à 5 séances par semaine accélère le rattrapage des jambes. Le gainage n'a pas besoin d'atteindre 10 séries.</p>
+    <p class="small muted">Sous 10 séries par semaine, un muscle progresse lentement. Avec une seule séance jambes par semaine, les ischios restent sous 10 séries : ajoute une série de leg curl si tu as le temps. Le gainage n'a pas besoin d'atteindre 10 séries.</p>
   </section>
   <section class="card"><div class="card-h"><h2>Poids de corps</h2><button class="btn btn-sm" data-act="weigh">+ Pesée</button></div>
     <p class="small muted">Pèse-toi le matin, à jeun, après les toilettes. La moyenne sur 7 jours compte plus que le chiffre du jour.</p>
@@ -1173,7 +1184,7 @@ function coachContext(){
     profil: {...S.profile, poids_moyen_7j: tg.bw ? fmt(tg.bw) : null, objectif_proteines_g: tg.protein, objectif_kcal: tg.kcal, tendance_poids_kg_sem: weightTrend()},
     rotation: ROT.map(r => SESSIONS[r].name).join(" → "), prochaine_seance: SESSIONS[id].name,
     prochaine_seance_cibles: SESSIONS[id].items.map(it => { const t = nextTarget(it); return `${EX[it.ex].name}: ${it.sets}×${it.min}-${it.max}, ${t.w} kg, objectif ${t.reps} reps (${t.reason})`; }),
-    programme: Object.fromEntries(Object.entries(SESSIONS).map(([k,s]) => [s.name, s.items.map(it => `${EX[it.ex].name} ${it.sets}×${it.min}-${it.max} repos ${it.rest}s`)])),
+    programme: Object.fromEntries(activeSessions().map(([k,s]) => [s.name, s.items.map(it => `${EX[it.ex].name} ${it.sets}×${it.min}-${it.max} repos ${it.rest}s`)])),
     records_avant_pause: Object.fromEntries(Object.entries(EX).filter(([,e]) => e.prev).map(([,e]) => [e.name, `${e.prev[0]}kg×${e.prev[1]}`])),
     seances_recentes: recent, rattrapage_jambes: {gain_force_jambes:pct(legsCatchup().legs), gain_force_haut:pct(legsCatchup().upper)},
     cardio_niveaux: Object.fromEntries(Object.entries(CARDIO).map(([k,d]) => [d.name, `niveau ${cardioLevel(k)+1}/${d.lv.length} : ${d.lv[cardioLevel(k)].txt}`])),
@@ -1369,7 +1380,8 @@ function finishWorkout(){
     ${prs.length ? `<div class="pr" style="background:var(--teal-soft)"><b>${prs.length} record(s) battu(s)</b>${prs.map(e => h(EX[e.ex].name)).join(", ")}</div>` : ""}
     <div><p class="eyebrow" style="margin-bottom:4px">La prochaine fois</p>${nxt.map(({it,t}) => `<div class="kv"><span>${h(EX[it.ex].name)}<br><span class="small muted">${h(t.reason)}</span></span><span class="num" style="text-align:right;white-space:nowrap"><b>${fmt(t.w)} kg × ${t.reps}${EX[it.ex].rl ? " s" : ""}</b><br>${chipFor(t)}</span></div>`).join("")}</div>
     <p class="small muted">Pense à tes protéines : un shake whey + lait dans l'heure, c'est ~35 g.</p>
-    <button class="btn btn-primary btn-block" data-close>Parfait</button>`);
+    ${SESSIONS[sid].mob ? `<button class="btn btn-block" data-mobgo style="border-color:var(--pull);color:var(--pull)">Lancer la routine mobilité (${mobMinutes()} min)</button>` : ""}
+    <button class="btn btn-primary btn-block" data-close>Parfait</button>`, sh => sh.querySelector("[data-mobgo]")?.addEventListener("click", () => { closeSheet(); startMobility(); }));
 }
 
 /* ================= SHEETS ================= */
@@ -1483,7 +1495,7 @@ function weighSheet(){
 function chooseSheet(){
   const rec = ROT[nextRotIndex()];
   openSheet(`<h2>Choisir la séance</h2><p class="small muted">La rotation reprendra après la séance choisie.</p>
-    ${Object.entries(SESSIONS).map(([id,s]) => `<button class="btn btn-block" data-s="${id}" style="justify-content:space-between;${sessColor(id)};border-left:5px solid var(--sess)"><span style="text-align:left"><b>${s.name}</b><br><span class="small muted">${s.sub} · ~${estMinutes(id)} min</span></span>${id === rec ? `<span class="chip up">recommandée</span>` : ""}</button>`).join("")}
+    ${activeSessions().map(([id,s]) => `<button class="btn btn-block" data-s="${id}" style="justify-content:space-between;${sessColor(id)};border-left:5px solid var(--sess)"><span style="text-align:left"><b>${s.name}</b><br><span class="small muted">${s.sub} · ~${estMinutes(id)} min</span></span>${id === rec ? `<span class="chip up">recommandée</span>` : ""}</button>`).join("")}
     <button class="btn btn-ghost" data-close>Annuler</button>`, sh => {
     sh.querySelectorAll("[data-s]").forEach(b => b.onclick = () => { closeSheet(); tryStart(b.dataset.s); });
   });
