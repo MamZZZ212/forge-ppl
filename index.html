@@ -6,8 +6,13 @@
 <meta name="theme-color" content="#C8233A">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Gym Rat">
+<meta name="application-name" content="Gym Rat">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<title>Forge PPL</title>
+<title>Gym Rat</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -56,7 +61,7 @@ p{margin:0}
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .top-in{max-width:760px;margin:0 auto;height:56px;display:flex;align-items:center;gap:12px}
 .brand{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:700;font-size:24px;letter-spacing:.02em;text-transform:uppercase}
-.brand-mark{width:30px;height:30px;border-radius:8px;background:var(--accent);display:grid;place-items:center;color:var(--on-accent)}
+.brand-mark{width:30px;height:30px;border-radius:8px;display:block;object-fit:cover;flex:0 0 auto}
 .sync{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
 .sync i{width:8px;height:8px;border-radius:50%;background:var(--muted)}
 .sync.cloud i{background:var(--good)} .sync.local i{background:var(--warn)}
@@ -276,7 +281,7 @@ table.prog td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
 <body>
 
 <header class="top"><div class="top-in">
-  <div class="brand"><span class="brand-mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg></span>Forge PPL</div>
+  <div class="brand"><img class="brand-mark" src="img/icon-192.png" alt="" width="30" height="30">Gym Rat</div>
   <div class="sync" id="sync"><i></i><span>Connexion…</span></div>
   <button class="icon-btn" id="btnProfile" aria-label="Profil et objectifs"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></button>
 </div></header>
@@ -1208,7 +1213,7 @@ function coachContext(){
     pesees_recentes: S.body.slice(-14).map(b => `${b.day}: ${b.kg} kg`),
   };
 }
-const RULES = `Tu es un coach de musculation et de nutrition intégré à l'app « Forge PPL ». Réponds en français, en tutoyant, de façon directe, concrète et chiffrée (environ 150 mots max). Appuie-toi sur les DONNÉES ci-dessous (programme Push/Pull/Legs en rotation, charges cibles, séances, cardio, poids, nutrition). Ne donne pas de diagnostic médical : en cas de douleur persistante, conseille un médecin ou un kiné.`;
+const RULES = `Tu es un coach de musculation et de nutrition intégré à l'app « Gym Rat ». Réponds en français, en tutoyant, de façon directe, concrète et chiffrée (environ 150 mots max). Appuie-toi sur les DONNÉES ci-dessous (programme Push/Pull/Legs en rotation, charges cibles, séances, cardio, poids, nutrition). Ne donne pas de diagnostic médical : en cas de douleur persistante, conseille un médecin ou un kiné.`;
 async function askCoach(text){
   if (!sampleFn || busy || !text.trim()) return;
   busy = true;
@@ -1553,8 +1558,8 @@ function pickImport(){ const inp = $("#importFile"); inp.value = ""; inp.click()
 function readImport(file){
   const fr = new FileReader();
   fr.onload = () => {
-    let p; try { p = JSON.parse(fr.result); } catch { return toast("Fichier illisible : choisis un export Forge PPL (.json)"); }
-    if (p?.app !== "forge-ppl" || !p.data || !Array.isArray(p.data.sessions)) return toast("Ce fichier n'est pas une sauvegarde Forge PPL");
+    let p; try { p = JSON.parse(fr.result); } catch { return toast("Fichier illisible : choisis un export Gym Rat (.json)"); }
+    if (p?.app !== "forge-ppl" || !p.data || !Array.isArray(p.data.sessions)) return toast("Ce fichier n'est pas une sauvegarde Gym Rat");
     const name = String(p.name || "Profil importé").slice(0,30);
     const summary = `${p.data.sessions.length} séance(s), ${(p.data.body||[]).length} pesée(s), ${(p.data.cardio||[]).length} cardio · exporté le ${fmtDate(p.exportedAt || new Date().toISOString())}`;
     const asNew = () => { createProfile(name, p.data); closeSheet(); W = null; render(); toast(`Profil ${name} importé`); };

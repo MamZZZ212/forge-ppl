@@ -1,4 +1,4 @@
-# Forge PPL
+# Gym Rat
 
 Application web de suivi d'entraînement **Push / Pull / Legs**, en un seul fichier HTML, faite pour le téléphone.
 

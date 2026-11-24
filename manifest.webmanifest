@@ -1,0 +1,15 @@
+{
+  "name": "Gym Rat",
+  "short_name": "Gym Rat",
+  "description": "Push, Pull, Legs, Accessoires : séances, progression, cardio, mobilité et nutrition.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0C0F17",
+  "theme_color": "#C8233A",
+  "icons": [
+    { "src": "img/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "img/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
